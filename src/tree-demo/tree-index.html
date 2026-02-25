@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>store-data</title>
+    <style>
+      .tree { font-family: ui-sans-serif, sans-serif; user-select: none; }
+      .tree-node { display: flex; align-items: center; gap: 6px; padding: 4px 0; min-height: 28px; }
+      .tree-node:hover { background: #f0f0f0; border-radius: 4px; }
+      .tree-expand { width: 18px; cursor: pointer; text-align: center; color: #666; flex-shrink: 0; }
+      .tree-expand.empty { visibility: hidden; }
+      .tree-expand::before { content: "▶"; display: inline-block; transition: transform 0.15s; }
+      .tree-expand.open::before { transform: rotate(90deg); }
+      .tree-children { margin-left: 16px; border-left: 1px solid #e0e0e0; padding-left: 8px; }
+      .tree-children.collapsed { display: none; }
+      .tree-checkbox { width: 16px; height: 16px; border: 1px solid #888; border-radius: 3px; cursor: pointer; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1; }
+      .tree-checkbox.checked { background: #1677ff; border-color: #1677ff; color: #fff; }
+      .tree-checkbox.checked::after { content: "✓"; font-size: 12px; }
+      .tree-checkbox.indeterminate { background: #1677ff; border-color: #1677ff; color: #fff; }
+      .tree-checkbox.indeterminate::after { content: ""; width: 10px; height: 2px; background: #fff; border-radius: 1px; }
+      .tree-label { flex: 1; font-size: 14px; }
+      .tree-actions { display: flex; gap: 4px; }
+      .tree-actions button { font-size: 12px; padding: 2px 8px; cursor: pointer; }
+      .tree-header { display: flex; align-items: center; gap: 8px; padding: 8px 0; margin-bottom: 8px; border-bottom: 1px solid #e0e0e0; }
+      .tree-header .tree-checkbox { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h2>树形选择</h2>
+      <p>点击箭头展开/折叠；点击方框选中/取消；可点按钮快捷操作</p>
+      <div id="node-tree" class="tree"></div>
+      <details style="margin-top: 1rem;">
+        <summary>原始 JSON</summary>
+        <pre id="node-data"></pre>
+      </details>
+    </div>
+    <script type="module" src="/src/index.ts"></script>
+  </body>
+</html>
