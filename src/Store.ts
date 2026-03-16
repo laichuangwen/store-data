@@ -22,13 +22,89 @@ class RowStore {
     rowIndex = 0;
     minHeight = 0;
     maxHeight = 0;
-    height = 0;
+    height = 16;
     calculatedHeight = 0;
     expand = false;
     expandLazy = false;
     expandLoading = false;
+    visible = true;
     checkState: CheckState = 'unchecked';
     constructor() {
+    }
+}
+class ColStore {
+    width = 100;
+    key = generateShortUUID();
+    constructor() {
+    }
+}
+export type ColNodeProps = {
+    column: Column;
+    store: Store;
+};
+export type Column = {
+    key: string;
+    title: string;
+    children?: Column[];
+};
+class ColNode {
+    private store: Store;
+    private colStore: ColStore;
+    column: Column;
+    parentNode: ColNode | null = null;
+    childrenNodes: ColNode[] = [];
+    constructor(props: ColNodeProps) {
+        this.store = props.store;
+        this.colStore = new ColStore();
+        this.column = props.column;
+        this.initChildrenNodes(props.column);
+    }
+    get isRoot(): boolean {
+        return this.key === this.store.rootColKey;
+    }
+    get key(): string {
+        return this.column.key;
+    }
+    get level(): number {
+        if (this.isRoot) return -1;
+        return this.parentNode ? this.parentNode.level + 1 : 0;
+    }
+    get parentColKeys(): string[] {
+        return this.parentNode ? this.parentNode.parentColKeys.concat(this.parentNode.key) : [];
+    }
+    get hasChildren(): boolean {
+        return this.childrenNodes.length > 0;
+    }
+    get parentColKey(): string {
+        return this.parentNode?.key ?? '';
+    }
+    get isLastChild(): boolean {
+        if (!this.parentNode) return false;
+        return this.parentNode.childrenNodes.length === this.parentNode.childrenNodes.indexOf(this) + 1;
+    }
+    private initChildrenNodes(column: Column) {
+        const { children } = column;
+        if (!Array.isArray(children)) return;
+        for (const child of children) {
+            const colNode = new ColNode({
+                column: child,
+                store: this.store,
+            });
+            this.addChildNode(colNode);
+        }
+    }
+
+    private addChildNode(child: ColNode) {
+        child.parentNode = this;
+        this.childrenNodes.push(child);
+        this.store!.addColNodeMap(child);
+    }
+    getMaxColLevel(): number {
+        let maxLevel = this.level;
+        for (const child of this.childrenNodes) {
+            maxLevel = Math.max(maxLevel, child.getMaxColLevel());
+        }
+        return maxLevel;
     }
 }
 class RowNode {
@@ -49,6 +125,9 @@ class RowNode {
             this.store.setRowStore(this.key, this.rowStore);
         }
         this.initChildrenNodes(props.data);
+    }
+    get height(): number {
+        return this.rowStore.height;
     }
     get isRoot(): boolean {
         return this.key === this.store.rootKey;
@@ -80,6 +159,12 @@ class RowNode {
         if (!this.parentNode) return false;
         return this.parentNode.childrenNodes.length === this.parentNode.childrenNodes.indexOf(this) + 1;
     }
+    set expand(expand: boolean) {
+        this.rowStore.expand = expand;
+    }
+    get expand(): boolean {
+        return this.rowStore.expand;
+    }
     private initChildrenNodes(data: Record<string, any>) {
         if (!this.store.hasTree && !this.isRoot) return;
         const { childrenKey } = this.store;
@@ -99,9 +184,20 @@ class RowNode {
         this.childrenNodes.push(child);
         this.store!.addRowNodeMap(child);
     }
+    getSumHeight(): number {
+        let sumHeight = 0;
+        // 先计算子节点高度
+        for (const child of this.childrenNodes) {
+            sumHeight += child.height;
+            if (child.expand) {
+                sumHeight += child.getSumHeight();
+            }
+        }
+        return sumHeight;
+    }
     getExpand(): boolean {
         return this.rowStore.expand;
-    }   
+    }
     setExpand(expand: boolean) {
         this.rowStore.expand = expand;
     }
@@ -146,32 +242,56 @@ class RowNode {
 
 
 class Store {
-    private rootNode!: RowNode;
+    private rootRowNode!: RowNode;
+    private rootColNode!: ColNode;
     rootKey = 'root_evt';
     uuidKey = 'id';
     childrenKey = 'children';
+    rootColKey = 'root_col_evt';
+    childrenColKey = 'children';
     hasTree = true;
     hasSelection = false;
+    maxColLevel = 0;
     columns: any[] = [];
     data: any[] = [];
     rowStoreMaps: Map<RowNodeKey, RowStore> = new Map();
+    colStoreMaps: Map<string, ColStore> = new Map();
     rowNodeMaps: Map<RowNodeKey, RowNode> = new Map();
+    colNodeMaps: Map<string, ColNode> = new Map();
     rowSelectable: RowSelectable | undefined;
     constructor(props: { columns: any[]; data: any[] }) {
         const { columns, data } = props;
         this.columns = columns;
         this.data = data;
-        const rootData = {
+        const rootColData = {
+            key: this.rootColKey,
+            title: '',
+            children: this.columns,
+        };
+        this.rootColNode = new ColNode({
+            column: rootColData,
+            store: this,
+        });
+        const rootRowData = {
             [this.uuidKey]: this.rootKey,
             [this.childrenKey]: this.data,
         };
-        this.rootNode = new RowNode({
-            data: rootData,
+        this.rootRowNode = new RowNode({
+            data: rootRowData,
             store: this,
         });
     }
     get rowNodes(): RowNode[] {
-        return this.rootNode.childrenNodes;
+        return this.rootRowNode.childrenNodes;
+    }
+    get colNodes(): ColNode[] {
+        return this.rootColNode.childrenNodes;
+    }
+    getMaxColLevel(): number {
+        return this.rootColNode.getMaxColLevel();
+    }
+    getSumHeight(): number {
+        return this.rootRowNode.getSumHeight();
     }
     getRowStore(key: RowNodeKey) {
         return this.rowStoreMaps.get(key);
@@ -192,12 +312,27 @@ class Store {
         };
         this.rowNodeMaps.set(node.key, node);
     }
+    getColStore(key: string) {
+        return this.colStoreMaps.get(key);
+    }
+    setColStore(key: string, colStore: ColStore) {
+        this.colStoreMaps.set(key, colStore);
+    }
+    getColNode(key: string) {
+        return this.colNodeMaps.get(key);
+    }
+    addColNodeMap(node: ColNode) {
+        if (this.colNodeMaps.has(node.key)) {
+            console.warn(`Duplicate keys detected: ${node.key}`);
+        };
+        this.colNodeMaps.set(node.key, node);
+    }
     setChecked(key: RowNodeKey, state: CheckState) {
         const node = this.getRowNode(key);
         if (node) node.setChecked(state);
     }
     getStoreCheckState(): CheckState {
-        return this.rootNode.getCheckState();
+        return this.rootRowNode.getCheckState();
     }
     setExpand(key: RowNodeKey, expanded: boolean) {
         const node = this.getRowNode(key);

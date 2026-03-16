@@ -421,7 +421,7 @@ let columns: any[] = [
     },
 ];
 let data: any[] = [];
-for (let i = 0; i < 20; i += 1) {
+for (let i = 0; i < 10; i += 1) {
     data.push({
         _height: [3, 5, 6, 7].includes(i) ? 60 : 0,
         id: `${i}`,
@@ -524,5 +524,126 @@ const store = new Store({
     data,
 });
 
-console.log(store.rowNodeMaps.size, columns);
+console.log(store.rowNodeMaps.size);
+// store.setChecked('1-2-1', 'checked');
+// store.setChecked('1-2-2', 'checked');
+// store.setChecked('1-2-3', 'checked');
+// store.setChecked('0', 'checked');
+// store.setChecked('1', 'checked');
+// console.log(store.rowNodes.map(item => item.getSelectable()));
+// console.log(store.getStoreCheckState());
+// console.log(store.rowNodes);
+console.log(store.colNodes);
+const colNode = store.getColNode('emp_name111');
+console.log('level', colNode?.level);
+console.log('maxColLevel', store.getMaxColLevel());
+
+function renderTreeNode(
+    store: Store,
+    parentEl: HTMLElement,
+    node: TreeNodeData,
+) {
+    const row = document.createElement('div');
+    row.className = 'tree-node';
+    row.setAttribute('data-key', String(node.key));
+
+    const expand = document.createElement('span');
+    expand.className = 'tree-expand' + (node.children.length ? '' : ' empty');
+    if (node.children.length) {
+        if (node.expand) expand.classList.add('open');
+        expand.onclick = (e) => {
+            e.stopPropagation();
+            store.setExpand(node.key, !node.expand);
+            refresh();
+        };
+    }
+    row.appendChild(expand);
+
+    const checkbox = document.createElement('span');
+    checkbox.className = 'tree-checkbox';
+    if (node.checkState === 'checked') checkbox.classList.add('checked');
+    else if (node.checkState === 'indeterminate') checkbox.classList.add('indeterminate');
+    checkbox.onclick = (e) => {
+        e.stopPropagation();
+        const next = node.checkState === 'checked' ? 'unchecked' : 'checked';
+        store.setChecked(node.key, next);
+        refresh();
+    };
+    row.appendChild(checkbox);
+
+    const label = document.createElement('span');
+    label.className = 'tree-label';
+    label.textContent = `key: ${node.key} (${node.checkState})`;
+    row.appendChild(label);
+
+    const actions = document.createElement('div');
+    actions.className = 'tree-actions';
+    const btnCheck = document.createElement('button');
+    btnCheck.textContent = '选中';
+    btnCheck.onclick = (e) => {
+        e.stopPropagation();
+        store.setChecked(node.key, 'checked');
+        refresh();
+    };
+    const btnUncheck = document.createElement('button');
+    btnUncheck.textContent = '取消';
+    btnUncheck.onclick = (e) => {
+        e.stopPropagation();
+        store.setChecked(node.key, 'unchecked');
+        refresh();
+    };
+    actions.append(btnCheck, btnUncheck);
+    row.appendChild(actions);
+
+    parentEl.appendChild(row);
+
+    if (node.children.length) {
+        const childrenEl = document.createElement('div');
+        childrenEl.className = 'tree-children' + (node.expand ? '' : ' collapsed');
+        node.children.forEach((child) => renderTreeNode(store, childrenEl, child));
+        parentEl.appendChild(childrenEl);
+    }
+}
+
+function renderTreeHeader(store: Store, parentEl: HTMLElement) {
+    const header = document.createElement('div');
+    header.className = 'tree-header';
+    const state = store.getStoreCheckState();
+    const checkbox = document.createElement('span');
+    checkbox.className = 'tree-checkbox';
+    if (state === 'checked') checkbox.classList.add('checked');
+    else if (state === 'indeterminate') checkbox.classList.add('indeterminate');
+    checkbox.title = '全选';
+    checkbox.onclick = () => {
+        const next = state === 'checked' ? 'unchecked' : 'checked';
+        store.rowNodes.forEach((node) => node.setChecked(next));
+        refresh();
+    };
+    header.appendChild(checkbox);
+    const label = document.createElement('span');
+    label.className = 'tree-label';
+    label.textContent = '全选';
+    label.style.fontWeight = '600';
+    header.appendChild(label);
+    parentEl.appendChild(header);
+}
+
+function refresh() {
+    const nodeData = store.getNodeDataTree();
+    const treeEl = document.getElementById('node-tree');
+    const preEl = document.getElementById('node-data');
+    if (treeEl) {
+        treeEl.innerHTML = '';
+        renderTreeHeader(store, treeEl);
+        nodeData.forEach((node) => renderTreeNode(store, treeEl, node));
+    }
+    if (preEl) {
+        preEl.textContent = JSON.stringify(nodeData, null, 2);
+    }
+    console.time('getSumHeight');
+    console.log('getSumHeight', store.getSumHeight());
+    console.timeEnd('getSumHeight');
+}
+
+refresh();
 
