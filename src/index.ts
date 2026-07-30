@@ -1,13 +1,12 @@
 import Store, { type TreeNodeData } from './Store'
-
 let columns: any[] = [
-    // {
-    //   title: "序号",
-    //   key: "index",
-    //   type: "index",
-    //   fixed: "left",
-    //   width: 50,
-    // },
+    {
+      title: "序号",
+      key: "index",
+      type: "index",
+      fixed: "left",
+      width: 50,
+    },
     {
         title: '工号',
         key: 'emp_no',
@@ -47,33 +46,33 @@ let columns: any[] = [
     //   width: 100,
     //   fixed: "left",
     // },
-    {
-        title: '姓名',
-        key: 'emp_name',
-        width: 100,
-        fixed: 'left',
-        align: 'left',
-        // dragRow: true,
-        // type: 'selection',
-        hoverIconName: 'icon-edit',
-        placeholder: '请输入',
-        // maxLineClamp: 3,
-        // editorType: 'none',
-        verticalAlign: 'middle',
-        // hide: true,
-        // render: (pEl, cell) => {
-        //     const cellEl = document.createElement('div');
-        //     cellEl.addEventListener('click', () => {
-        //         console.log('点击了姓名');
-        //     });
-        //     cellEl.style.opacity = '0.5';
-        //     cellEl.style.backgroundColor = 'cyan';
+    // {
+    //     title: '姓名',
+    //     key: 'emp_name',
+    //     width: 100,
+    //     fixed: 'left',
+    //     align: 'left',
+    //     // dragRow: true,
+    //     // type: 'selection',
+    //     hoverIconName: 'icon-edit',
+    //     placeholder: '请输入',
+    //     // maxLineClamp: 3,
+    //     // editorType: 'none',
+    //     verticalAlign: 'middle',
+    //     // hide: true,
+    //     // render: (pEl, cell) => {
+    //     //     const cellEl = document.createElement('div');
+    //     //     cellEl.addEventListener('click', () => {
+    //     //         console.log('点击了姓名');
+    //     //     });
+    //     //     cellEl.style.opacity = '0.5';
+    //     //     cellEl.style.backgroundColor = 'cyan';
 
-        //     cellEl.innerHTML = cell.text;
-        //     pEl.appendChild(cellEl);
-        // },
-        // render: "emp_name",
-    },
+    //     //     cellEl.innerHTML = cell.text;
+    //     //     pEl.appendChild(cellEl);
+    //     // },
+    //     // render: "emp_name",
+    // },
     // {
     //   title: '部门',
     //   key: 'dep_name',
@@ -102,6 +101,7 @@ let columns: any[] = [
                 key: 'emp_name1',
                 align: 'left',
                 fixed: 'left',
+                // hide: true,
                 children: [
                     {
                         title: '姓名11',
@@ -129,15 +129,17 @@ let columns: any[] = [
                                 key: 'emp_name111',
                                 align: 'left',
                                 width: 200,
+                                hide: true,
                             },
                             {
                                 title: '姓名112',
                                 key: 'emp_name112',
-                                // hide: true,
+                                hide: true,
                             },
                             {
                                 title: '姓名113',
                                 key: 'emp_name113',
+                                hide: true,
                                 // hideDisabled: true,
                             },
                         ],
@@ -151,15 +153,17 @@ let columns: any[] = [
                                 key: 'emp_name221',
                                 align: 'left',
                                 width: 200,
+                                hide: true,
                             },
                             {
                                 title: '姓名222',
                                 key: 'emp_name222',
-                                // hide: true,
+                                hide: true,
                             },
                             {
                                 title: '姓名223',
                                 key: 'emp_name223',
+                                hide: true,
                                 // hideDisabled: true,
                             },
                         ],
@@ -172,248 +176,248 @@ let columns: any[] = [
             },
         ],
     },
-    {
-        title: '手机号',
-        key: 'phone',
-        maxLineClamp: 'auto',
-        sortBy: 'string',
-        align: 'center',
-        verticalAlign: 'bottom',
-        // fixed: 'right',
-        // readonly: false,
-        // overflowTooltipHeaderShow: true,
-        // formatterFooter: ({ value }) => {
-        //     return `合：${value}`;
-        // },
-        width: 100,
-        // renderHeader: (pEl, cell) => {
-        //     const cellEl = document.createElement('div');
-        //     cellEl.style.width = '100%';
-        //     cellEl.style.height = '100%';
-        //     cellEl.style.opacity = '0.5';
-        //     // cellEl.style.backgroundColor = 'cyan';
-        //     cellEl.style.display = 'flex';
-        //     cellEl.style.justifyContent = 'center';
-        //     cellEl.style.alignItems = 'center';
-        //     cellEl.style.userSelect = 'text';
-        //     cellEl.innerHTML = cell.text;
-        //     pEl.appendChild(cellEl);
-        // },
-    },
-    {
-        title: '性别',
-        key: 'sex',
-        // readonly: false,
-        // render: "sex",
-        // rules: [
-        //     {
-        //         validator: (rule, value, callback) => {
-        //             if (!value) {
-        //                 callback('该项必填哦！');
-        //             } else {
-        //                 callback();
-        //             }
-        //         },
-        //     },
-        // ],
-        renderHeader: (pEl, cell) => {
-            const cellEl = document.createElement('div');
-            cellEl.style.width = '100%';
-            cellEl.style.height = '100%';
-            cellEl.style.opacity = '0.5';
-            cellEl.style.lineHeight = '1.2';
-            cellEl.style.color = 'red';
-            cellEl.style.fontSize = '12px';
-            // cellEl.style.backgroundColor = 'cyan';
-            cellEl.style.display = 'flex';
-            cellEl.style.justifyContent = 'center';
-            cellEl.style.alignItems = 'center';
-            cellEl.style.userSelect = 'text';
-            cellEl.innerHTML = cell.text;
-            pEl.appendChild(cellEl);
-        },
-        render: (pEl, cell) => {
-            const cellEl = document.createElement('div');
-            cellEl.style.width = '100%';
-            cellEl.style.opacity = '0.5';
-            cellEl.style.backgroundColor = 'cyan';
-            cellEl.style.display = 'block';
-            // cellEl.style.justifyContent = 'center';
-            // cellEl.style.alignItems = 'center';
-            cellEl.style.whiteSpace = 'pre-line';
-            cellEl.style.userSelect = 'text';
-            cellEl.innerHTML = cell.text;
-            cellEl.className = 'evt-body-cell-auto-height';
-            cellEl.dataset.rowIndex = cell.rowIndex;
-            cellEl.dataset.visibleWidth = cell.visibleWidth;
-            cellEl.dataset.visibleHeight = cell.visibleHeight;
-            pEl.appendChild(cellEl);
-        },
-    },
-    {
-        title: '计薪月份',
-        // fixed: "right",
-        key: 'salary_month',
-        align: 'right',
-        hoverIconName: 'icon-select',
-        sort: 4,
-        width: 200,
-    },
-    {
-        title: '出生日期',
-        key: 'birthday',
-        editorType: 'date',
-        hoverIconName: 'icon-date',
-        sort: 2,
-    },
-    {
-        title: '工作地址',
-        key: 'work_address',
-        formatter: ({ value }) => {
-            return `工作11地址：${value}`;
-        },
-    },
-    {
-        title: '家庭地址',
-        key: 'address',
-        headerAlign: 'center',
-        align: 'left',
-        readonly: false,
-        width: 250,
-        // overflowTooltipShow: false,
-        overflowTooltipMaxWidth: 200,
-        overflowTooltipPlacement: 'top',
-        // readonly: false,
-        // rules: {
-        //     required: true,
-        //     message: '该项必填哦！',
-        // },
-        render: (pEl, cell) => {
-            const cellEl = document.createElement('div');
-            // 添加事件
-            cellEl.addEventListener('click', () => {
-                console.log('点击了家庭地址');
-            });
-            cellEl.style.minHeight = '36px';
-            cellEl.style.opacity = '0.5';
-            // cellEl.style.backgroundColor = 'cyan';
-            cellEl.style.flex = 'none';
-            cellEl.style.display = 'block';
-            cellEl.style.padding = '8px';
-            // cellEl.style.justifyContent = 'center';
-            // cellEl.style.alignItems = 'center';
-            // cellEl.style.whiteSpace = 'pre-line';
-            cellEl.style.userSelect = 'text';
-            // cellEl.style.border = '1px solid red';
-            cellEl.style.overflowWrap = 'break-word';
-            cellEl.innerHTML = cell.value || ''; // 设置单元格内容
-            pEl.appendChild(cellEl);
-        },
-    },
-    {
-        title: '请假开始时间',
-        key: 'start_dt',
-    },
-    {
-        title: '物料编码',
-        key: 'materialNo',
-        align: 'right',
-        selectorCellValueType: 'displayText', // displayText | value
-        formatter({ value }: { value: string }) {
-            if (!value) {
-                return '';
-            }
-            const v = parseFloat(value);
-            return `物料编码：${v}`;
-        },
-    },
-    {
-        title: '数量',
-        key: 'requiredQuantity',
-        rules: [
-            {
-                required: true, // TODO:表格1.2.19有问题
-                pattern: /^(0|[1-9]\d*)$/,
-                message: '请输入0或正整数',
-                validator(rule, value, callback) {
-                    if (value > 10) {
-                        callback('数量不能大于10');
-                    } else {
-                        callback();
-                    }
-                },
-            },
-        ],
-        align: 'right',
-    },
-    { title: '单位', key: 'unit' },
-    { title: '工作性质', key: 'work_type' },
-    { title: '工作状态', key: 'work_status' },
-    { title: '户籍城市', key: 'household_city' },
-    { title: '户籍地址', key: 'household_address' },
-    { title: '民族', key: 'nation' },
-    // { title: '工作地址', key: 'work_address' },
-    {
-        title: '工作邮箱',
-        key: 'work_email',
-        // rule: {
-        //   required: true, message: '请输入邮箱地址'
-        // },
-    },
-    { title: '个人邮箱', key: 'email' },
-    {
-        title: '工龄',
-        key: 'work_age',
-    },
-    { title: '司龄', key: 'company_age' },
-    { title: '合同公司', key: 'contract_company' },
-    { title: 'qq号', key: 'qq' },
-    { title: '年龄', key: 'age' },
-    { title: '品牌', key: 'brandName' },
-    { title: '商品名称', key: 'goodsName' },
-    { title: '规格型号', key: 'sn' },
-    { title: '客户备注', key: 'customerRemarks' },
-    {
-        title: '采购价(元)',
-        key: 'purchasePrice',
-        fixed: 'right',
-        required: true,
-        align: 'right',
-        // verticalAlign: 'top',
-        // type: 'number',
-        rules: [
-            {
-                required: true,
-                message: '请输入',
-            },
-            {
-                // required: false,
-                message: '最多输入两位小数',
-                // 只能输入数字或小数点，且小数点后最多两位
-                pattern: /^(\d+(\.\d{1,2})?|\.?\d{1,2})$/,
-            },
-        ],
-    },
-    {
-        title: '销售价(元)',
-        fixed: 'right',
-        key: 'salePrice',
-        type: 'number',
-        align: 'left',
-        hoverIconName: 'icon-edit',
-        placeholder: '请输入',
-        precision: 2,
-        min: 0,
-        max: 100,
-        // readonly: true,
-        rules: [
-            {
-                required: true,
-                message: '最多输入两位小数',
-                pattern: /^(\d+(\.\d{1,2})?|\.?\d{1,2})$/,
-            },
-        ],
-    },
+    // {
+    //     title: '手机号',
+    //     key: 'phone',
+    //     maxLineClamp: 'auto',
+    //     sortBy: 'string',
+    //     align: 'center',
+    //     verticalAlign: 'bottom',
+    //     // fixed: 'right',
+    //     // readonly: false,
+    //     // overflowTooltipHeaderShow: true,
+    //     // formatterFooter: ({ value }) => {
+    //     //     return `合：${value}`;
+    //     // },
+    //     width: 100,
+    //     // renderHeader: (pEl, cell) => {
+    //     //     const cellEl = document.createElement('div');
+    //     //     cellEl.style.width = '100%';
+    //     //     cellEl.style.height = '100%';
+    //     //     cellEl.style.opacity = '0.5';
+    //     //     // cellEl.style.backgroundColor = 'cyan';
+    //     //     cellEl.style.display = 'flex';
+    //     //     cellEl.style.justifyContent = 'center';
+    //     //     cellEl.style.alignItems = 'center';
+    //     //     cellEl.style.userSelect = 'text';
+    //     //     cellEl.innerHTML = cell.text;
+    //     //     pEl.appendChild(cellEl);
+    //     // },
+    // },
+    // {
+    //     title: '性别',
+    //     key: 'sex',
+    //     // readonly: false,
+    //     // render: "sex",
+    //     // rules: [
+    //     //     {
+    //     //         validator: (rule, value, callback) => {
+    //     //             if (!value) {
+    //     //                 callback('该项必填哦！');
+    //     //             } else {
+    //     //                 callback();
+    //     //             }
+    //     //         },
+    //     //     },
+    //     // ],
+    //     renderHeader: (pEl, cell) => {
+    //         const cellEl = document.createElement('div');
+    //         cellEl.style.width = '100%';
+    //         cellEl.style.height = '100%';
+    //         cellEl.style.opacity = '0.5';
+    //         cellEl.style.lineHeight = '1.2';
+    //         cellEl.style.color = 'red';
+    //         cellEl.style.fontSize = '12px';
+    //         // cellEl.style.backgroundColor = 'cyan';
+    //         cellEl.style.display = 'flex';
+    //         cellEl.style.justifyContent = 'center';
+    //         cellEl.style.alignItems = 'center';
+    //         cellEl.style.userSelect = 'text';
+    //         cellEl.innerHTML = cell.text;
+    //         pEl.appendChild(cellEl);
+    //     },
+    //     render: (pEl, cell) => {
+    //         const cellEl = document.createElement('div');
+    //         cellEl.style.width = '100%';
+    //         cellEl.style.opacity = '0.5';
+    //         cellEl.style.backgroundColor = 'cyan';
+    //         cellEl.style.display = 'block';
+    //         // cellEl.style.justifyContent = 'center';
+    //         // cellEl.style.alignItems = 'center';
+    //         cellEl.style.whiteSpace = 'pre-line';
+    //         cellEl.style.userSelect = 'text';
+    //         cellEl.innerHTML = cell.text;
+    //         cellEl.className = 'evt-body-cell-auto-height';
+    //         cellEl.dataset.rowIndex = cell.rowIndex;
+    //         cellEl.dataset.visibleWidth = cell.visibleWidth;
+    //         cellEl.dataset.visibleHeight = cell.visibleHeight;
+    //         pEl.appendChild(cellEl);
+    //     },
+    // },
+    // {
+    //     title: '计薪月份',
+    //     // fixed: "right",
+    //     key: 'salary_month',
+    //     align: 'right',
+    //     hoverIconName: 'icon-select',
+    //     sort: 4,
+    //     width: 200,
+    // },
+    // {
+    //     title: '出生日期',
+    //     key: 'birthday',
+    //     editorType: 'date',
+    //     hoverIconName: 'icon-date',
+    //     sort: 2,
+    // },
+    // {
+    //     title: '工作地址',
+    //     key: 'work_address',
+    //     formatter: ({ value }) => {
+    //         return `工作11地址：${value}`;
+    //     },
+    // },
+    // {
+    //     title: '家庭地址',
+    //     key: 'address',
+    //     headerAlign: 'center',
+    //     align: 'left',
+    //     readonly: false,
+    //     width: 250,
+    //     // overflowTooltipShow: false,
+    //     overflowTooltipMaxWidth: 200,
+    //     overflowTooltipPlacement: 'top',
+    //     // readonly: false,
+    //     // rules: {
+    //     //     required: true,
+    //     //     message: '该项必填哦！',
+    //     // },
+    //     render: (pEl, cell) => {
+    //         const cellEl = document.createElement('div');
+    //         // 添加事件
+    //         cellEl.addEventListener('click', () => {
+    //             console.log('点击了家庭地址');
+    //         });
+    //         cellEl.style.minHeight = '36px';
+    //         cellEl.style.opacity = '0.5';
+    //         // cellEl.style.backgroundColor = 'cyan';
+    //         cellEl.style.flex = 'none';
+    //         cellEl.style.display = 'block';
+    //         cellEl.style.padding = '8px';
+    //         // cellEl.style.justifyContent = 'center';
+    //         // cellEl.style.alignItems = 'center';
+    //         // cellEl.style.whiteSpace = 'pre-line';
+    //         cellEl.style.userSelect = 'text';
+    //         // cellEl.style.border = '1px solid red';
+    //         cellEl.style.overflowWrap = 'break-word';
+    //         cellEl.innerHTML = cell.value || ''; // 设置单元格内容
+    //         pEl.appendChild(cellEl);
+    //     },
+    // },
+    // {
+    //     title: '请假开始时间',
+    //     key: 'start_dt',
+    // },
+    // {
+    //     title: '物料编码',
+    //     key: 'materialNo',
+    //     align: 'right',
+    //     selectorCellValueType: 'displayText', // displayText | value
+    //     formatter({ value }: { value: string }) {
+    //         if (!value) {
+    //             return '';
+    //         }
+    //         const v = parseFloat(value);
+    //         return `物料编码：${v}`;
+    //     },
+    // },
+    // {
+    //     title: '数量',
+    //     key: 'requiredQuantity',
+    //     rules: [
+    //         {
+    //             required: true, // TODO:表格1.2.19有问题
+    //             pattern: /^(0|[1-9]\d*)$/,
+    //             message: '请输入0或正整数',
+    //             validator(rule, value, callback) {
+    //                 if (value > 10) {
+    //                     callback('数量不能大于10');
+    //                 } else {
+    //                     callback();
+    //                 }
+    //             },
+    //         },
+    //     ],
+    //     align: 'right',
+    // },
+    // { title: '单位', key: 'unit' },
+    // { title: '工作性质', key: 'work_type' },
+    // { title: '工作状态', key: 'work_status' },
+    // { title: '户籍城市', key: 'household_city' },
+    // { title: '户籍地址', key: 'household_address' },
+    // { title: '民族', key: 'nation' },
+    // // { title: '工作地址', key: 'work_address' },
+    // {
+    //     title: '工作邮箱',
+    //     key: 'work_email',
+    //     // rule: {
+    //     //   required: true, message: '请输入邮箱地址'
+    //     // },
+    // },
+    // { title: '个人邮箱', key: 'email' },
+    // {
+    //     title: '工龄',
+    //     key: 'work_age',
+    // },
+    // { title: '司龄', key: 'company_age' },
+    // { title: '合同公司', key: 'contract_company' },
+    // { title: 'qq号', key: 'qq' },
+    // { title: '年龄', key: 'age' },
+    // { title: '品牌', key: 'brandName' },
+    // { title: '商品名称', key: 'goodsName' },
+    // { title: '规格型号', key: 'sn' },
+    // { title: '客户备注', key: 'customerRemarks' },
+    // {
+    //     title: '采购价(元)',
+    //     key: 'purchasePrice',
+    //     fixed: 'right',
+    //     required: true,
+    //     align: 'right',
+    //     // verticalAlign: 'top',
+    //     // type: 'number',
+    //     rules: [
+    //         {
+    //             required: true,
+    //             message: '请输入',
+    //         },
+    //         {
+    //             // required: false,
+    //             message: '最多输入两位小数',
+    //             // 只能输入数字或小数点，且小数点后最多两位
+    //             pattern: /^(\d+(\.\d{1,2})?|\.?\d{1,2})$/,
+    //         },
+    //     ],
+    // },
+    // {
+    //     title: '销售价(元)',
+    //     fixed: 'right',
+    //     key: 'salePrice',
+    //     type: 'number',
+    //     align: 'left',
+    //     hoverIconName: 'icon-edit',
+    //     placeholder: '请输入',
+    //     precision: 2,
+    //     min: 0,
+    //     max: 100,
+    //     // readonly: true,
+    //     rules: [
+    //         {
+    //             required: true,
+    //             message: '最多输入两位小数',
+    //             pattern: /^(\d+(\.\d{1,2})?|\.?\d{1,2})$/,
+    //         },
+    //     ],
+    // },
     {
         title: '操作',
         key: 'hander',
@@ -421,7 +425,7 @@ let columns: any[] = [
     },
 ];
 let data: any[] = [];
-for (let i = 0; i < 10; i += 1) {
+for (let i = 0; i < 100; i += 1) {
     data.push({
         _height: [3, 5, 6, 7].includes(i) ? 60 : 0,
         id: `${i}`,
@@ -518,13 +522,16 @@ for (let i = 0; i < 0; i += 1) {
         align: 'right',
     });
 }
-
+console.time('initStore');
 const store = new Store({
     columns,
     data,
 });
+// console.timeEnd('initStore');
+// store.generateRowIndex();
+// console.log('heights', store.getNodeDataTree());
+// console.log('rowNodeMaps', store.rowNodeMaps.size);
 
-console.log(store.rowNodeMaps.size);
 // store.setChecked('1-2-1', 'checked');
 // store.setChecked('1-2-2', 'checked');
 // store.setChecked('1-2-3', 'checked');
@@ -532,11 +539,16 @@ console.log(store.rowNodeMaps.size);
 // store.setChecked('1', 'checked');
 // console.log(store.rowNodes.map(item => item.getSelectable()));
 // console.log(store.getStoreCheckState());
-// console.log(store.rowNodes);
-console.log(store.colNodes);
-const colNode = store.getColNode('emp_name111');
-console.log('level', colNode?.level);
-console.log('maxColLevel', store.getMaxColLevel());
+
+// console.time('getSumHeight');
+// console.log('getSumHeight', store.getSumHeight());
+// console.timeEnd('getSumHeight');
+
+
+// console.log(store.colNodes);
+// const colNode = store.getColNode('emp_name111');
+// console.log('level', colNode?.level);
+// console.log('maxColLevel', store.getMaxColLevel());
 
 function renderTreeNode(
     store: Store,
@@ -573,7 +585,7 @@ function renderTreeNode(
 
     const label = document.createElement('span');
     label.className = 'tree-label';
-    label.textContent = `key: ${node.key} (${node.checkState})`;
+    label.textContent = `index: ${node.rowIndex} key: ${node.key} (${node.checkState})`;
     row.appendChild(label);
 
     const actions = document.createElement('div');
@@ -641,9 +653,11 @@ function refresh() {
         preEl.textContent = JSON.stringify(nodeData, null, 2);
     }
     console.time('getSumHeight');
-    console.log('getSumHeight', store.getSumHeight());
+    console.log('sumHeight', store.sumHeight);
     console.timeEnd('getSumHeight');
+
 }
+
 
 refresh();
 

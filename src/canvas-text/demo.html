@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>canvas-text Demo</title>
+    <style>
+      :root {
+        --bg: #eef1f5;
+        --panel: #ffffff;
+        --border: #e2e8f0;
+        --text: #1e293b;
+        --muted: #64748b;
+        --accent: #0c8ce9;
+        --accent-soft: #e8f4fd;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(ellipse 80% 50% at 10% -10%, #dbeafe 0%, transparent 50%),
+          radial-gradient(ellipse 60% 40% at 100% 0%, #e0e7ff 0%, transparent 45%),
+          var(--bg);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+        min-height: 100vh;
+      }
+
+      @media (max-width: 840px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      h1 {
+        margin: 0 0 4px;
+        font-size: 1.35rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .sub {
+        margin: 0 0 20px;
+        color: var(--muted);
+        font-size: 0.875rem;
+        line-height: 1.5;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+        align-self: start;
+      }
+
+      .field {
+        margin-bottom: 16px;
+      }
+
+      .field label {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 6px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .field label span {
+        font-weight: 500;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .pad-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 12px;
+      }
+
+      .pad-grid .pad-item label {
+        margin-bottom: 4px;
+      }
+
+      textarea,
+      select,
+      input[type='range'],
+      input[type='color'] {
+        width: 100%;
+      }
+
+      textarea {
+        min-height: 110px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font: inherit;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        resize: vertical;
+        outline: none;
+      }
+
+      textarea:focus,
+      select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(12 140 233 / 15%);
+      }
+
+      select {
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font: inherit;
+        font-size: 0.875rem;
+        background: #fff;
+      }
+
+      input[type='range'] {
+        accent-color: var(--accent);
+      }
+
+      input[type='color'] {
+        height: 36px;
+        padding: 2px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        cursor: pointer;
+      }
+
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .btn-row button {
+        flex: 1;
+        min-width: 0;
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        font: inherit;
+        font-size: 0.8125rem;
+        cursor: pointer;
+        color: var(--text);
+      }
+
+      .btn-row button:hover {
+        border-color: #cbd5e1;
+        background: #f8fafc;
+      }
+
+      .btn-row button.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .checks {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .checks label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .checks input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--accent);
+      }
+
+      .stage {
+        display: flex;
+        flex-direction: column;
+        min-height: 480px;
+      }
+
+      .stage-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .stage-header h2 {
+        margin: 0;
+        font-size: 0.9375rem;
+        font-weight: 600;
+      }
+
+      #heightInfo {
+        font-size: 0.8125rem;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .canvas-wrap {
+        flex: 1;
+        min-height: 420px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+      }
+
+      #canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: 420px;
+        cursor: text;
+        touch-action: none;
+        user-select: none;
+      }
+
+      kbd {
+        font-size: 0.8em;
+        padding: 1px 5px;
+        border: 1px solid #cbd5e1;
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        background: #f8fafc;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      code {
+        font-size: 0.8em;
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: #f1f5f9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="panel">
+        <h1>canvas-text</h1>
+        <p class="sub">
+          在 Canvas 矩形区域内绘制多行文本，支持自动换行、对齐。预览区可鼠标划选文字，
+          <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>C</kbd> 复制。
+        </p>
+
+        <div class="field">
+          <label for="text">文本内容</label>
+          <textarea id="text">Canvas 原生 API 对多行文本支持有限。
+
+使用 canvas-text 可以在指定矩形内自动换行绘制，并控制水平 / 垂直对齐。
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.</textarea>
+        </div>
+
+        <div class="field">
+          <label>水平对齐</label>
+          <div class="btn-row">
+            <button type="button" data-group="align" data-value="left">左</button>
+            <button type="button" data-group="align" data-value="center" class="active">中</button>
+            <button type="button" data-group="align" data-value="right">右</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>垂直对齐</label>
+          <div class="btn-row">
+            <button type="button" data-group="verticalAlign" data-value="top">上</button>
+            <button type="button" data-group="verticalAlign" data-value="middle" class="active">中</button>
+            <button type="button" data-group="verticalAlign" data-value="bottom">下</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="fontSize">字号 <span id="fontSizeVal">18</span></label>
+          <input id="fontSize" type="range" min="10" max="48" value="18" />
+        </div>
+
+        <div class="field">
+          <label for="lineHeight">行高 <span id="lineHeightVal">自动</span></label>
+          <input id="lineHeight" type="range" min="0" max="64" value="0" />
+        </div>
+
+        <div class="field">
+          <label for="boxWidth">区域宽度 <span id="boxWidthVal">280</span></label>
+          <input id="boxWidth" type="range" min="120" max="480" value="280" />
+        </div>
+
+        <div class="field">
+          <label for="boxHeight">区域高度 <span id="boxHeightVal">220</span></label>
+          <input id="boxHeight" type="range" min="80" max="400" value="220" />
+        </div>
+
+        <div class="field">
+          <label>内边距 padding</label>
+          <div class="pad-grid">
+            <div class="pad-item">
+              <label for="padTop">上 <span id="padTopVal">12</span></label>
+              <input id="padTop" type="range" min="0" max="48" value="12" />
+            </div>
+            <div class="pad-item">
+              <label for="padRight">右 <span id="padRightVal">16</span></label>
+              <input id="padRight" type="range" min="0" max="48" value="16" />
+            </div>
+            <div class="pad-item">
+              <label for="padBottom">下 <span id="padBottomVal">12</span></label>
+              <input id="padBottom" type="range" min="0" max="48" value="12" />
+            </div>
+            <div class="pad-item">
+              <label for="padLeft">左 <span id="padLeftVal">8</span></label>
+              <input id="padLeft" type="range" min="0" max="48" value="8" />
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="maxLineClamp">最大行数 <span id="maxLineClampVal">不限</span></label>
+          <input id="maxLineClamp" type="range" min="0" max="10" value="0" />
+        </div>
+
+        <div class="field">
+          <label for="font">字体</label>
+          <select id="font">
+            <option value="Arial">Arial</option>
+            <option value="Georgia">Georgia</option>
+            <option value="'Courier New', monospace">Courier New</option>
+            <option value="'PingFang SC', 'Microsoft YaHei', sans-serif" selected>
+              系统中文
+            </option>
+            <option value="'Times New Roman', serif">Times New Roman</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="color">文字颜色</label>
+          <input id="color" type="color" value="#1e293b" />
+        </div>
+
+        <div class="field checks">
+          <label><input id="debug" type="checkbox" checked /> 显示调试线</label>
+          <label><input id="autoRowHeight" type="checkbox" /> 自动行高（超高回传高度）</label>
+        </div>
+      </aside>
+
+      <section class="stage">
+        <div class="stage-header">
+          <h2>预览</h2>
+          <div id="heightInfo">实际文本高度：—</div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="canvas"></canvas>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="./demo.ts"></script>
+  </body>
+</html>
