@@ -25,7 +25,6 @@ export interface RectOptions {
 export class Paint {
     private ctx: CanvasRenderingContext2D
     constructor(target: HTMLCanvasElement | CanvasRenderingContext2D) {
-        // happy-dom 等环境可能没有 CanvasRenderingContext2D 全局构造函数，
         // 不能用 instanceof 判断；非 canvas 元素即视为已有 ctx。
         if (!(target instanceof HTMLCanvasElement)) {
             this.ctx = target

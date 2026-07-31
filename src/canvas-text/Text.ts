@@ -5,15 +5,14 @@ import { Shape, type ShapeConfig } from './Shape'
 export type TextAlign = 'left' | 'center' | 'right'
 export type VerticalAlign = 'top' | 'middle' | 'bottom'
 
-/** 四边内边距；传 number 时四边相同 */
 export type PaddingInput =
   | number
   | {
-      top?: number
-      right?: number
-      bottom?: number
-      left?: number
-    }
+    top?: number
+    right?: number
+    bottom?: number
+    left?: number
+  }
 
 export interface Padding {
   top: number
@@ -23,75 +22,38 @@ export interface Padding {
 }
 
 export interface TextConfig extends ShapeConfig {
-  /** 文本内容 */
   text: string
-  /** 内边距（相对文本框） */
   padding?: PaddingInput
-  /** 最大行数；超出后截断并追加省略号 */
   maxLineClamp?: number
-  /**
-   * 为 true 时不按区域高度截断；内容超出时通过 onHeight 回传所需总高度。
-   * 为 false（默认）时文字不得超过区域高度，超出自动截断。
-   */
   autoRowHeight?: boolean
-  /** autoRowHeight 且内容超高时回调所需总高度（含 padding） */
-  onHeight?: (height: number) => void
-  /** 绘制调试辅助线 */
+  onAutoHeight?: (height: number) => void
   debug?: boolean
-  /** 水平对齐 */
   align?: TextAlign
-  /** 垂直对齐 */
   verticalAlign?: VerticalAlign
-  /** 字号（px） */
   fontSize?: number
-  /** 字重，如 'bold' / '600' */
   fontWeight?: string
-  /** 字体样式，如 'italic' */
   fontStyle?: string
-  /** 字体变体，如 'small-caps' */
   fontVariant?: string
-  /** 字体族 */
   font?: string
-  /** 行高（px）；不传则按字体测量 */
   lineHeight?: number
-  /** 填充颜色 */
   color?: string
-  /** 选区（扁平文本下标，end 不含）；用于高亮 */
   selection?: TextSelectionRange
-  /** 选区背景色 */
   selectionColor?: string
-  /**
-   * 绘制文字前图标列表（内联于首行文字起点前；仅首行占位，其余行全宽）。
-   * 构造时传入的 x/y 会被布局覆盖；width/height 决定图标尺寸。
-   */
   beforeIcons?: Icon[]
-  /**
-   * 绘制文字后图标列表（跟随末行文字终点；末行会为图标留宽，放不下时单独换行且不夹带文字）。
-   * 构造时传入的 x/y 会被布局覆盖；width/height 决定图标尺寸。
-   */
   afterIcons?: Icon[]
-  /** 图标间距（图标之间、图标与文字之间），默认 4 */
   iconGap?: number
 }
 
-/** 选区范围：基于布局扁平文本（行间以 \\n 连接）的下标 */
 export interface TextSelectionRange {
-  /** 起始下标（含） */
   start: number
-  /** 结束下标（不含） */
   end: number
 }
 
 export interface DrawTextResult {
-  /** 实际绘制文本总高度 */
   height: number
-  /** 完整内容所需文本高度（截断前） */
   neededHeight: number
-  /** 实际绘制行数 */
   lines: number
-  /** 是否被截断（maxLineClamp 或区域高度） */
   clamped: boolean
-  /** 布局扁平文本（与 hitTest / 选区下标一致） */
   flatText: string
 }
 
@@ -99,7 +61,6 @@ export interface SplitTextProps {
   ctx: CanvasRenderingContext2D
   text: string
   width: number
-  /** 首行可用宽度；用于前置图标内联占位，默认与 width 相同 */
   firstLineWidth?: number
 }
 
@@ -107,7 +68,6 @@ export interface GetTextHeightProps {
   ctx: CanvasRenderingContext2D
   text: string
   style: string
-  /** 测量失败时的回退高度 */
   fallback?: number
 }
 
@@ -122,9 +82,7 @@ interface ContentBox {
   contentHeight: number
   contentXEnd: number
   contentYEnd: number
-  /** 前置图标占用宽度（仅首行），含与文字间距 */
   beforeIconsWidth: number
-  /** 后置图标占用宽度（仅末行），含与文字间距 */
   afterIconsWidth: number
 }
 
@@ -134,14 +92,8 @@ interface LayoutLine {
   y: number
   width: number
   height: number
-  /** 字符左边缘相对 line.x；长度 = text.length + 1 */
   edges: number[]
-  /** 该行首字符在扁平文本中的下标 */
   flatStart: number
-  /**
-   * 截断省略号起始下标（行内）；null 表示无溢出省略号。
-   * 溢出省略号不可选中、不可复制。
-   */
   ellipsisStart: number | null
 }
 
@@ -153,7 +105,6 @@ interface TextLayout {
   startY: number
   neededHeight: number
   clamped: boolean
-  /** 后置图标是否单独占一行（影响垂直对齐总高度） */
   afterOnNextLine: boolean
 }
 
@@ -174,7 +125,7 @@ const defaultTextOptions = {
   padding: 0 as PaddingInput,
   maxLineClamp: undefined as number | undefined,
   autoRowHeight: false,
-  onHeight: undefined as ((height: number) => void) | undefined,
+  onAutoHeight: undefined as ((height: number) => void) | undefined,
   selection: undefined as TextSelectionRange | undefined,
   selectionColor: DEFAULT_SELECTION_COLOR,
   iconGap: 4,
@@ -217,15 +168,10 @@ function linesHeight(lineCount: number, charHeight: number): number {
   return lineCount <= 0 ? 0 : charHeight * lineCount
 }
 
-/** 行内可选中字符数（不含溢出省略号） */
 function selectableLength(line: LayoutLine): number {
   return line.ellipsisStart ?? line.text.length
 }
 
-/**
- * 测量单行文本高度（ascent + descent）。
- * 仅用 ascent 会偏小，导致行距低估、文字画出区域。
- */
 function getTextHeight({
   ctx,
   text,
@@ -245,10 +191,9 @@ function getTextHeight({
   ctx.textBaseline = prevBaseline
   ctx.font = prevFont
 
-  return height > 0 ? height : fallback
+  return height > 0 ? height * 1.2 : fallback
 }
 
-/** 找到不超过 maxWidth 的最大字符数（至少 1） */
 function findFitLength(
   measure: (value: string) => number,
   text: string,
@@ -278,7 +223,6 @@ function createMeasureCache(ctx: CanvasRenderingContext2D) {
   }
 }
 
-/** 按宽度将文本拆成多行；支持 \\n；首行可使用更窄宽度（内联前置图标） */
 function splitText({
   ctx,
   text,
@@ -309,8 +253,6 @@ function splitText({
       }
 
       let splitPoint = findFitLength(measure, remaining, maxW)
-      // 仅当会从英文/数字单词中间断开时，才回退到最近空格；
-      // 避免中英混排里普通空格被当成强制换行点、过早折行。
       if (
         splitPoint < remaining.length &&
         isAsciiWordChar(remaining[splitPoint - 1]) &&
@@ -321,13 +263,11 @@ function splitText({
       }
 
       let line = remaining.slice(0, splitPoint)
-      // 防御：确保该行宽度不超过目标（浮点/字体测量误差）
       while (line.length > 1 && measure(line) > maxW) {
         line = line.slice(0, -1)
         splitPoint = line.length
       }
 
-      // 若正好断在空格上，空格只作为断行点，不带到下一行行首
       remaining = remaining.slice(splitPoint).replace(/^\s+/, '')
       lines.push(line.trimEnd())
       isFirstLine = false
@@ -341,13 +281,12 @@ function isAsciiWordChar(ch: string | undefined): boolean {
   if (!ch) return false
   const code = ch.charCodeAt(0)
   return (
-    (code >= 48 && code <= 57) || // 0-9
-    (code >= 65 && code <= 90) || // A-Z
-    (code >= 97 && code <= 122) // a-z
+    (code >= 48 && code <= 57) ||
+    (code >= 65 && code <= 90) ||
+    (code >= 97 && code <= 122)
   )
 }
 
-/** 将文本截断到宽度内并保证以省略号结尾 */
 function truncateWithEllipsis(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -394,7 +333,6 @@ function clampLines(
   return { lines: clamped, clamped: true }
 }
 
-/** 图标组自身宽度（含图标间距，不含与文字的间距） */
 function iconsSpanWidth(icons: Icon[], gap: number): number {
   if (icons.length === 0) return 0
   let width = 0
@@ -405,7 +343,6 @@ function iconsSpanWidth(icons: Icon[], gap: number): number {
   return width
 }
 
-/** 图标组占用的内容宽度（含与文字一侧的间距） */
 function measureIconsWidth(icons: Icon[], gap: number): number {
   if (icons.length === 0) return 0
   return iconsSpanWidth(icons, gap) + gap
@@ -422,9 +359,6 @@ function measureEdges(
   return edges
 }
 
-/**
- * Canvas 多行文本绘制（自动换行、对齐、截断、划选）。
- */
 export class Text extends Shape {
   text: string
   private readonly options: ResolvedTextOptions
@@ -445,22 +379,18 @@ export class Text extends Shape {
     this.box = this.createContentBox()
   }
 
-  /** 最近一次 draw / render 的结果 */
   getDrawResult(): DrawTextResult {
     return this.result
   }
 
-  /** 前置图标（布局后 x/y 已更新，可用于 hitTest） */
   getBeforeIcons(): Icon[] {
     return this.beforeIcons
   }
 
-  /** 后置图标（布局后 x/y 已更新，可用于 hitTest） */
   getAfterIcons(): Icon[] {
     return this.afterIcons
   }
 
-  /** 前后图标合集 */
   getIcons(): Icon[] {
     return [...this.beforeIcons, ...this.afterIcons]
   }
@@ -487,10 +417,9 @@ export class Text extends Shape {
       layout
 
     if (options.autoRowHeight) {
+      // 向下取整
       const neededBoxHeight = neededHeight + pad.top + pad.bottom
-      if (neededBoxHeight > this.height) {
-        options.onHeight?.(neededBoxHeight)
-      }
+      options.onAutoHeight?.(Math.ceil(neededBoxHeight))
     }
 
     const drawnHeight =
@@ -516,11 +445,6 @@ export class Text extends Shape {
     }
   }
 
-  /**
-   * 将画布坐标映射为扁平文本下标（用于划选）。
-   * 返回 [0, flatText.length] 的插入位置。
-   * 溢出省略号「...」不可选中，命中落在其上时对齐到省略号前。
-   */
   hitTest(x: number, y: number): number {
     const layout = this.ensureLayout(this.paint.getCtx())
     const { lines } = layout
@@ -536,7 +460,6 @@ export class Text extends Shape {
     const localX = x - line.x
 
     if (localX <= 0) return line.flatStart
-    // 行宽含省略号；点在可截取文本之后（含省略号区域）→ 停在省略号前
     if (localX >= line.edges[limit]) return line.flatStart + limit
 
     for (let i = 0; i < limit; i++) {
@@ -547,14 +470,12 @@ export class Text extends Shape {
     return line.flatStart + limit
   }
 
-  /** 当前选区对应的文本（含换行） */
   getSelectedText(): string {
     const layout = this.ensureLayout(this.paint.getCtx())
     const range = this.normalizedSelection(layout.flatText.length)
     return range ? layout.flatText.slice(range.start, range.end) : ''
   }
 
-  /** 布局扁平文本 */
   getFlatText(): string {
     return this.ensureLayout(this.paint.getCtx()).flatText
   }
@@ -573,7 +494,6 @@ export class Text extends Shape {
     const charHeight = this.measureCharHeight(ctx, style)
     const prepared = this.prepareLines(ctx, charHeight)
     const afterOnNextLine = this.willPlaceAfterOnNextLine(ctx, prepared.lines)
-    // 后置换行时计入总高度，bottom / middle 才会把文字向上挤
     const drawnHeight =
       linesHeight(prepared.lines.length, charHeight) +
       (afterOnNextLine ? charHeight : 0)
@@ -617,7 +537,6 @@ export class Text extends Shape {
       txtY += charHeight
     }
 
-    // 截断产生的溢出省略号不可选中、不可复制
     if (prepared.clamped && layoutLines.length > 0) {
       const lastLine = layoutLines[layoutLines.length - 1]
       if (lastLine.text.endsWith(ELLIPSIS)) {
@@ -639,7 +558,6 @@ export class Text extends Shape {
     return this.layoutCache
   }
 
-  /** 命中 y 所在行；夹在行间时取上方最近行 */
   private findLineAtY(lines: LayoutLine[], y: number): LayoutLine {
     let line = lines[0]
     for (const candidate of lines) {
@@ -649,7 +567,6 @@ export class Text extends Shape {
     return line
   }
 
-  /** 可选中文本的最大下标（不含溢出省略号） */
   private getSelectableEnd(layout: TextLayout): number {
     const line = layout.lines.find((l) => l.ellipsisStart != null)
     return line
@@ -657,7 +574,6 @@ export class Text extends Shape {
       : layout.flatText.length
   }
 
-  /** 落在溢出省略号上的下标一律对齐到省略号前 */
   private excludeEllipsisIndex(index: number, lines: LayoutLine[]): number {
     for (const line of lines) {
       if (line.ellipsisStart == null) continue
@@ -808,31 +724,29 @@ export class Text extends Shape {
 
     if (options.maxLineClamp != null) {
       const n = Math.min(lines.length, options.maxLineClamp)
-      ;({ lines, clamped } = clampLines(
-        ctx,
-        lines,
-        options.maxLineClamp,
-        lastLineMax(n)
-      ))
+        ; ({ lines, clamped } = clampLines(
+          ctx,
+          lines,
+          options.maxLineClamp,
+          lastLineMax(n)
+        ))
     }
 
     const neededHeight = linesHeight(lines.length, charHeight)
 
-    // 默认：不得超过区域高度，超出按整行截断（带省略号）
     if (
       maxLinesByHeight != null &&
       linesHeight(lines.length, charHeight) > contentHeight
     ) {
       const n = Math.min(lines.length, Math.max(0, maxLinesByHeight))
-      ;({ lines, clamped } = clampLines(
-        ctx,
-        lines,
-        maxLinesByHeight,
-        lastLineMax(n)
-      ))
+        ; ({ lines, clamped } = clampLines(
+          ctx,
+          lines,
+          maxLinesByHeight,
+          lastLineMax(n)
+        ))
     }
 
-    // 末行放不下后置图标时：若不能再折行则缩短末行；能折则留给 layoutIcons 单独一行放图标（不夹带字符）
     if (afterIconsWidth > 0 && lines.length > 0) {
       const lastMax = lastLineMax(lines.length)
       const last = lines[lines.length - 1]
@@ -887,10 +801,6 @@ export class Text extends Shape {
     return { txtY: contentY, debugY: contentY }
   }
 
-  /**
-   * 末行是否还能与后置图标同行：
-   * 前置(仅单行时) + 末行文字 + 后置 ≤ 内容宽。
-   */
   private canPlaceAfterOnSameLine(
     ctx: CanvasRenderingContext2D,
     lines: string[]
@@ -903,7 +813,6 @@ export class Text extends Shape {
     return lastWidth + afterIconsWidth <= contentWidth - lead + 0.5
   }
 
-  /** 有可见文字且末行放不下后置时，后置单独占一行 */
   private willPlaceAfterOnNextLine(
     ctx: CanvasRenderingContext2D,
     lines: string[]
@@ -913,11 +822,6 @@ export class Text extends Shape {
     return !this.canPlaceAfterOnSameLine(ctx, lines)
   }
 
-  /**
-   * 前置贴首行文字起点；后置贴末行文字终点，并跟随水平 align。
-   * 同行放不下则后置换到下一行，仍按 align 对齐。
-   * 无可见文字时，前后图标同一行按 align 排布。
-   */
   private layoutIcons(lines: LayoutLine[], afterOnNextLine: boolean): void {
     const { contentX, contentXEnd, contentWidth, contentY, contentHeight } =
       this.box
@@ -1011,7 +915,6 @@ export class Text extends Shape {
     _textAnchor: number
   ): void {
     const { options } = this
-    // 按行左边缘绘制，适配首行缩进 / 末行让位
     ctx.textBaseline = 'top'
     ctx.textAlign = 'left'
     if (options.color) ctx.fillStyle = options.color

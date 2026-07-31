@@ -222,7 +222,7 @@ describe('canvas-text', () => {
 
   it('autoRowHeight callbacks needed box height when overflowing', () => {
     const ctx = createMockCtx(8)
-    const onHeight = vi.fn()
+    const onAutoHeight = vi.fn()
     const result = drawText(ctx, 'one two three four five six seven eight', {
       x: 0,
       y: 0,
@@ -234,12 +234,12 @@ describe('canvas-text', () => {
       align: 'left',
       verticalAlign: 'top',
       autoRowHeight: true,
-      onHeight,
+      onAutoHeight,
     })
     expect(result.clamped).toBe(false)
     expect(result.neededHeight).toBeGreaterThan(30 - 8)
-    expect(onHeight).toHaveBeenCalledTimes(1)
-    expect(onHeight.mock.calls[0][0]).toBe(result.neededHeight + 8)
+    expect(onAutoHeight).toHaveBeenCalledTimes(1)
+    expect(onAutoHeight.mock.calls[0][0]).toBe(result.neededHeight + 8)
   })
 
   it('height clamp keeps complete lines with ellipsis, no clip', () => {

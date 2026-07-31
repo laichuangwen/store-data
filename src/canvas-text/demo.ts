@@ -318,8 +318,9 @@ function render() {
     verticalAlign,
     padding,
     autoRowHeight,
-    onHeight: (h) => {
+    onAutoHeight: (h) => {
       reportedHeight = h
+      console.log('onAutoHeight', h);
     },
     debug: debugEl.checked,
     selection,
