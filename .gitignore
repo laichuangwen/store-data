@@ -1,4 +1,5 @@
 node_modules
 dist
+dist-size-check
 *.local
 .DS_Store
