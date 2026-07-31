@@ -8,6 +8,8 @@ const paint = new Paint(canvas)
 const ctx = paint.getCtx()
 
 const ICON_SIZE = 36
+const INLINE_ICON_SIZE = 18
+
 const svgIcon = new window.Image()
 svgIcon.src =
   'data:image/svg+xml,' +
@@ -17,6 +19,25 @@ svgIcon.src =
   <path d="M12 13h12M12 18h12M12 23h8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
 </svg>`.trim())
 svgIcon.onload = () => render()
+
+const starIcon = new window.Image()
+starIcon.src =
+  'data:image/svg+xml,' +
+  encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+  <path d="M9 2.2l1.76 3.56 3.93.57-2.84 2.77.67 3.91L9 11.18l-3.52 1.85.67-3.91L3.3 6.33l3.93-.57L9 2.2z" fill="#F59E0B"/>
+</svg>`.trim())
+starIcon.onload = () => render()
+
+const checkIcon = new window.Image()
+checkIcon.src =
+  'data:image/svg+xml,' +
+  encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+  <circle cx="9" cy="9" r="8" fill="#10B981"/>
+  <path d="M5.5 9.2l2.2 2.2 4.8-4.8" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`.trim())
+checkIcon.onload = () => render()
 
 const textEl = document.getElementById('text') as HTMLTextAreaElement
 const fontSizeEl = document.getElementById('fontSize') as HTMLInputElement
@@ -35,12 +56,13 @@ const padBottomEl = document.getElementById('padBottom') as HTMLInputElement
 const padBottomVal = document.getElementById('padBottomVal')!
 const padLeftEl = document.getElementById('padLeft') as HTMLInputElement
 const padLeftVal = document.getElementById('padLeftVal')!
-const maxLineClampEl = document.getElementById('maxLineClamp') as HTMLInputElement
-const maxLineClampVal = document.getElementById('maxLineClampVal')!
+const maxLineClampEl = document.getElementById('maxLineClamp') as HTMLSelectElement
 const fontEl = document.getElementById('font') as HTMLSelectElement
 const colorEl = document.getElementById('color') as HTMLInputElement
 const debugEl = document.getElementById('debug') as HTMLInputElement
 const autoRowHeightEl = document.getElementById('autoRowHeight') as HTMLInputElement
+const showBeforeIconsEl = document.getElementById('showBeforeIcons') as HTMLInputElement
+const showAfterIconsEl = document.getElementById('showAfterIcons') as HTMLInputElement
 const heightInfoEl = document.getElementById('heightInfo')!
 
 let align: TextAlign = 'center'
@@ -81,8 +103,6 @@ function syncLabels() {
   padRightVal.textContent = padRightEl.value
   padBottomVal.textContent = padBottomEl.value
   padLeftVal.textContent = padLeftEl.value
-  maxLineClampVal.textContent =
-    maxLineClampEl.value === '0' ? '不限' : maxLineClampEl.value
 }
 
 function setActive(group: string, value: string) {
@@ -108,6 +128,12 @@ document.querySelectorAll('[data-group="verticalAlign"]').forEach((btn) => {
     render()
   })
 })
+
+function resolveMaxLineClamp(): number | undefined {
+  const value = maxLineClampEl.value
+  if (value === 'height') return undefined
+  return Number(value)
+}
 
 function clearSelection() {
   selAnchor = 0
@@ -191,7 +217,7 @@ function render() {
 
   const fontSize = Number(fontSizeEl.value)
   const lineHeight = Number(lineHeightEl.value)
-  const maxLineClamp = Number(maxLineClampEl.value)
+  const maxLineClamp = resolveMaxLineClamp()
   const autoRowHeight = autoRowHeightEl.checked
 
   const padding = {
@@ -202,6 +228,82 @@ function render() {
   }
 
   const selection = selectionRange()
+
+  const beforeIcons: Icon[] = []
+  const afterIcons: Icon[] = []
+
+  if (
+    showBeforeIconsEl.checked &&
+    svgIcon.complete &&
+    svgIcon.naturalWidth > 0
+  ) {
+    beforeIcons.push(
+      new Icon(paint, {
+        source: svgIcon,
+        name: 'before-list',
+        x: 0,
+        y: 0,
+        width: INLINE_ICON_SIZE,
+        height: INLINE_ICON_SIZE,
+      })
+    )
+  }
+
+  if (
+    showBeforeIconsEl.checked &&
+    starIcon.complete &&
+    starIcon.naturalWidth > 0
+  ) {
+    beforeIcons.push(
+      new Icon(paint, {
+        source: starIcon,
+        name: 'before-star',
+        x: 0,
+        y: 0,
+        width: INLINE_ICON_SIZE,
+        height: INLINE_ICON_SIZE,
+      })
+    )
+  }
+
+  if (
+    showAfterIconsEl.checked &&
+    checkIcon.complete &&
+    checkIcon.naturalWidth > 0
+  ) {
+    afterIcons.push(
+      new Icon(paint, {
+        source: checkIcon,
+        name: 'after-check',
+        x: 0,
+        y: 0,
+        width: INLINE_ICON_SIZE,
+        height: INLINE_ICON_SIZE,
+      })
+    )
+  }
+
+  if (
+    showAfterIconsEl.checked &&
+    svgIcon.complete &&
+    svgIcon.naturalWidth > 0
+  ) {
+    afterIcons.push(
+      new IconWithShadow(paint, {
+        source: svgIcon,
+        name: 'after-shadow',
+        x: 0,
+        y: 0,
+        width: INLINE_ICON_SIZE + 4,
+        height: INLINE_ICON_SIZE + 4,
+        borderColor: '#d0d5dd',
+        fillColor: '#ffffff',
+        padding: 2,
+        borderWidth: 1,
+        radius: 6,
+      })
+    )
+  }
 
   textView = new Text(paint, {
     text: textEl.value,
@@ -221,11 +323,17 @@ function render() {
     },
     debug: debugEl.checked,
     selection,
+    beforeIcons,
+    afterIcons,
+    iconGap: 6,
     ...(lineHeight > 0 ? { lineHeight } : {}),
-    ...(maxLineClamp > 0 ? { maxLineClamp } : {}),
+    ...(maxLineClamp != null ? { maxLineClamp } : {}),
   })
 
   const { height, neededHeight, lines, clamped } = textView.draw()
+
+  // 文本框内外图标均可悬停
+  hoverIcons = [...hoverIcons, ...textView.getIcons()]
 
   const parts = [
     `绘制 ${height.toFixed(1)} px`,
@@ -233,7 +341,11 @@ function render() {
     `${lines} 行`,
     `pad ${padding.top}/${padding.right}/${padding.bottom}/${padding.left}`,
   ]
+  if (beforeIcons.length) parts.push(`前 ${beforeIcons.length} 图标`)
+  if (afterIcons.length) parts.push(`后 ${afterIcons.length} 图标`)
   if (clamped) parts.push('已截断')
+  if (maxLineClamp != null) parts.push(`限 ${maxLineClamp} 行`)
+  else parts.push('按高度')
   if (reportedHeight != null) parts.push(`回传 ${reportedHeight} px`)
   if (selection) {
     parts.push(`已选 ${selection.end - selection.start} 字`)
@@ -265,8 +377,10 @@ async function copySelection() {
 
 canvas.addEventListener('pointerdown', (e) => {
   if (!textView || e.button !== 0) return
-  canvas.setPointerCapture(e.pointerId)
   const { x, y } = canvasPoint(e)
+  // 点在图标上时不启动划选
+  if (hoverIcons.some((icon) => icon.inside(x, y))) return
+  canvas.setPointerCapture(e.pointerId)
   selAnchor = selFocus = textView.hitTest(x, y)
   selecting = true
   render()
@@ -326,6 +440,8 @@ const inputs = [
   colorEl,
   debugEl,
   autoRowHeightEl,
+  showBeforeIconsEl,
+  showAfterIconsEl,
 ]
 
 for (const el of inputs) {

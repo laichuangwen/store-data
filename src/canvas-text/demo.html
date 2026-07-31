@@ -266,7 +266,7 @@
       <aside class="panel">
         <h1>canvas-text</h1>
         <p class="sub">
-          在 Canvas 矩形区域内绘制多行文本，支持自动换行、对齐。预览区可鼠标划选文字，
+          在 Canvas 矩形区域内绘制多行文本，支持自动换行、对齐、前后图标。预览区可鼠标划选文字，
           <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>C</kbd> 复制。
         </p>
 
@@ -340,8 +340,18 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit.</textarea>
         </div>
 
         <div class="field">
-          <label for="maxLineClamp">最大行数 <span id="maxLineClampVal">不限</span></label>
-          <input id="maxLineClamp" type="range" min="0" max="10" value="0" />
+          <label for="maxLineClamp">最大行数 maxLineClamp</label>
+          <select id="maxLineClamp">
+            <option value="height" selected>按高度</option>
+            <option value="3">3 行</option>
+            <option value="4">4 行</option>
+            <option value="5">5 行</option>
+            <option value="6">6 行</option>
+            <option value="7">7 行</option>
+            <option value="8">8 行</option>
+            <option value="9">9 行</option>
+            <option value="10">10 行</option>
+          </select>
         </div>
 
         <div class="field">
@@ -365,6 +375,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit.</textarea>
         <div class="field checks">
           <label><input id="debug" type="checkbox" checked /> 显示调试线</label>
           <label><input id="autoRowHeight" type="checkbox" /> 自动行高（超高回传高度）</label>
+          <label><input id="showBeforeIcons" type="checkbox" checked /> 前置图标 beforeIcons</label>
+          <label><input id="showAfterIcons" type="checkbox" checked /> 后置图标 afterIcons</label>
         </div>
       </aside>
 

@@ -19,11 +19,15 @@ export interface RectOptions {
     borderColor?: string;
     fillColor?: string;
     radius?: number | [number, number, number, number];
+    lineDash?: number[];
+    lineDashOffset?: number;
 };
 export class Paint {
     private ctx: CanvasRenderingContext2D
     constructor(target: HTMLCanvasElement | CanvasRenderingContext2D) {
-        if (target instanceof CanvasRenderingContext2D) {
+        // happy-dom 等环境可能没有 CanvasRenderingContext2D 全局构造函数，
+        // 不能用 instanceof 判断；非 canvas 元素即视为已有 ctx。
+        if (!(target instanceof HTMLCanvasElement)) {
             this.ctx = target
             return
         }
@@ -134,7 +138,14 @@ export class Paint {
         y: number,
         width: number,
         height: number,
-        { borderWidth = 1, borderColor, fillColor, radius = 0 }: RectOptions = {},
+        {
+            borderWidth = 1,
+            borderColor,
+            fillColor,
+            radius = 0,
+            lineDash,
+            lineDashOffset,
+        }: RectOptions = {},
     ) {
         this.ctx.save();
         if (fillColor !== undefined) {
@@ -143,6 +154,10 @@ export class Paint {
         if (borderColor !== undefined) {
             this.ctx.lineWidth = borderWidth;
             this.ctx.strokeStyle = borderColor;
+        }
+        if (lineDash) {
+            this.ctx.lineDashOffset = lineDashOffset ?? 0;
+            this.ctx.setLineDash(lineDash);
         }
         this.ctx.beginPath();
         if (radius === 0) {

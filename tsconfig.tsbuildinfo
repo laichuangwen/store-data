@@ -1,1 +1,1 @@
-{"root":["./src/event.ts","./src/store.ts","./src/index.ts","./src/tree-demo/tree-demo.ts"],"errors":true,"version":"5.6.3"}
+{"root":["./src/event.ts","./src/store.ts","./src/table.ts","./src/index.ts","./src/canvas-text/icon.ts","./src/canvas-text/iconwithshadow.ts","./src/canvas-text/paint.ts","./src/canvas-text/shape.ts","./src/canvas-text/text.ts","./src/canvas-text/demo.ts","./src/canvas-text/index.ts","./src/plugins/autofill.ts","./src/text/index.ts","./src/tree-demo/tree-demo.ts"],"errors":true,"version":"5.6.3"}

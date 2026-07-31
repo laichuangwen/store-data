@@ -8,6 +8,8 @@
     "dev:canvas-text": "vite --open /src/canvas-text/demo.html",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "size:canvas-text": "node scripts/check-canvas-text-size.mjs",
+    "size:canvas-text:watch": "node scripts/check-canvas-text-size.mjs --watch",
     "test": "vitest run",
     "test:watch": "vitest"
   },
