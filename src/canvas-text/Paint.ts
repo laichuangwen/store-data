@@ -1,3 +1,5 @@
+import { Shape, ShapeEventMap } from "./Shape";
+
 export interface LineOptions {
     lineCap?: CanvasLineCap;
     lineDash?: number[];
@@ -7,6 +9,19 @@ export interface LineOptions {
     borderColor?: string | CanvasGradient | CanvasPattern;
     fillColor?: string | CanvasGradient | CanvasPattern;
 };
+export type PointerCursor =
+    | 'default'
+    | 'pointer'
+    | 'move'
+    | 'text'
+    | 'grab'
+    | 'grabbing'
+    | 'col-resize'
+    | 'row-resize'
+    | 'crosshair'
+    | 'not-allowed'
+    | 'wait'
+    | 'none';
 export interface ShadowOptions {
     side: 'left' | 'right' | 'top' | 'bottom';
     shadowWidth: number;
@@ -23,19 +38,54 @@ export interface RectOptions {
     lineDashOffset?: number;
 };
 export class Paint {
+    private shapes: Shape[] = [];
     private ctx: CanvasRenderingContext2D
+    private target: HTMLCanvasElement | null = null
     constructor(target: HTMLCanvasElement | CanvasRenderingContext2D) {
         // 不能用 instanceof 判断；非 canvas 元素即视为已有 ctx。
         if (!(target instanceof HTMLCanvasElement)) {
             this.ctx = target
             return
         }
+        this.target = target
         const ctx = target.getContext('2d')
         if (!ctx) throw new Error('canvas context not found')
         this.ctx = ctx
     }
+    addShape(shape: Shape) {
+        this.shapes.push(shape)
+    }
+    removeShape(shape: Shape) {
+        this.shapes = this.shapes.filter(s => s !== shape)
+    }
+    getShapes(): Shape[] {
+        return this.shapes
+    }
+    removeAllShapes() {
+        this.shapes = []
+    }
+    dispatchListener<K extends keyof ShapeEventMap>(eventName: K, e: ShapeEventMap[K]) {
+        for (const icon of this.shapes) {
+            icon.dispatch(eventName, e)
+        }
+    }
+    getRelativePosition(e: PointerEvent | MouseEvent) {
+        if (!(this.target instanceof HTMLCanvasElement)) {
+            throw new Error('target is not a canvas element')
+        }
+        const rect = this.target.getBoundingClientRect()
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+        }
+    }
     getCtx() {
         return this.ctx;
+    }
+    setCursor(cursor: PointerCursor) {
+        if (this.target instanceof HTMLCanvasElement) {
+            this.target.style.cursor = cursor;
+        }
     }
     /**
      * 绘制单侧阴影

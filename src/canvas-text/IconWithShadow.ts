@@ -24,7 +24,6 @@ export class IconWithShadow extends Icon {
         this.borderWidth = config.borderWidth ?? 1;
         this.radius = config.radius ?? 10;
     }
-
     render(paint: Paint): void {
         paint.drawRect(this.x, this.y, this.width, this.height, {
             radius: this.radius,

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>父子点击事件冒泡 Demo</title>
+    <style>
+      :root {
+        --bg: #eef1f5;
+        --text: #1e293b;
+        --muted: #64748b;
+        --parent: #bfdbfe;
+        --child: #fde68a;
+        --log-child: #ca8a04;
+        --log-parent: #2563eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        color: var(--text);
+        background: var(--bg);
+        padding: 32px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 1.35rem;
+      }
+
+      .sub {
+        margin: 0 0 24px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: flex-start;
+      }
+
+      .parent {
+        width: 280px;
+        height: 200px;
+        padding: 24px;
+        background: var(--parent);
+        border: 2px solid #60a5fa;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .child {
+        width: 140px;
+        height: 90px;
+        background: var(--child);
+        border: 2px solid #f59e0b;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+      }
+
+      .panel {
+        flex: 1;
+        min-width: 260px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+      }
+
+      .panel h2 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+      }
+
+      .hint {
+        margin: 0 0 12px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      #log {
+        margin: 0;
+        min-height: 160px;
+        max-height: 280px;
+        overflow: auto;
+        padding: 12px;
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 8px;
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+      }
+
+      .log-child {
+        color: #fbbf24;
+      }
+
+      .log-parent {
+        color: #93c5fd;
+      }
+
+      .actions {
+        margin-top: 12px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        border-radius: 8px;
+        padding: 6px 12px;
+        cursor: pointer;
+        font-size: 0.875rem;
+      }
+
+      button.active {
+        border-color: #2563eb;
+        background: #eff6ff;
+        color: #1d4ed8;
+      }
+
+      .verdict {
+        margin-top: 16px;
+        padding: 12px 14px;
+        background: #fff;
+        border-left: 4px solid #2563eb;
+        border-radius: 0 8px 8px 0;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        max-width: 640px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>父 / 子点击：会不会同时触发？</h1>
+    <p class="sub">
+      点击黄色子元素，默认会先触发子元素的 click，再沿冒泡路径触发蓝色父元素的 click。
+      <strong>不是同一瞬间并行，而是按顺序先后触发。</strong>
+    </p>
+
+    <div class="row">
+      <div id="parent" class="parent">
+        父元素
+        <div id="child" class="child">子元素</div>
+      </div>
+
+      <div class="panel">
+        <h2>触发日志</h2>
+        <p class="hint">点子元素看顺序；点父元素空白区域则只有父事件。</p>
+        <pre id="log"></pre>
+        <div class="actions">
+          <button id="btn-clear" type="button">清空日志</button>
+          <button id="btn-stop" type="button">开启 stopPropagation</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <strong>结论：</strong>点击子元素时，父子的 click 都会触发（冒泡阶段：子 → 父）。
+      若子元素里调用 <code>event.stopPropagation()</code>，父元素就不会再收到这次点击。
+    </div>
+
+    <script type="module">
+      const parent = document.getElementById('parent')
+      const child = document.getElementById('child')
+      const logEl = document.getElementById('log')
+      const btnClear = document.getElementById('btn-clear')
+      const btnStop = document.getElementById('btn-stop')
+
+      let stopBubble = false
+      let seq = 0
+
+      function log(who, text) {
+        seq += 1
+        const line = document.createElement('div')
+        line.className = who === 'child' ? 'log-child' : 'log-parent'
+        line.textContent = `#${seq} [${who}] ${text}`
+        logEl.appendChild(line)
+        logEl.scrollTop = logEl.scrollHeight
+      }
+
+      child.addEventListener('click', (e) => {
+        log('child', `子元素 click @ ${e.target.id || e.target.className}`)
+        if (stopBubble) {
+          e.stopPropagation()
+          log('child', '已 stopPropagation → 父元素不会触发')
+        }
+      })
+
+      parent.addEventListener('click', (e) => {
+        log('parent', `父元素 click @ ${e.target.id || e.target.className}`)
+      })
+
+      btnClear.addEventListener('click', () => {
+        logEl.textContent = ''
+        seq = 0
+      })
+
+      btnStop.addEventListener('click', () => {
+        stopBubble = !stopBubble
+        btnStop.classList.toggle('active', stopBubble)
+        btnStop.textContent = stopBubble
+          ? '关闭 stopPropagation'
+          : '开启 stopPropagation'
+      })
+    </script>
+  </body>
+</html>

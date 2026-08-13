@@ -69,30 +69,11 @@ let align: TextAlign = 'center'
 let verticalAlign: VerticalAlign = 'middle'
 let reportedHeight: number | null = null
 
-/** 划选锚点 / 焦点（扁平文本下标） */
-let selAnchor = 0
-let selFocus = 0
-let selecting = false
 let textView: Text | null = null
 
 /** 可悬停的图标列表（每次 render 重建） */
 let hoverIcons: Icon[] = []
-let hoveredIconName: string | null = null
 
-function onIconHover(icon: Icon | null) {
-  const name = icon?.name ?? null
-  if (hoveredIconName === name) return
-  hoveredIconName = name
-  canvas.style.cursor = name ? 'pointer' : ''
-  if (name) {
-    console.log('[icon hover]', name, icon)
-  }
-  // 刷新底部状态栏以展示当前悬停图标
-  if (heightInfoEl.textContent) {
-    const base = heightInfoEl.textContent.replace(/ · 悬停 .+/, '')
-    heightInfoEl.textContent = name ? `${base} · 悬停 ${name}` : base
-  }
-}
 function syncLabels() {
   fontSizeVal.textContent = fontSizeEl.value
   lineHeightVal.textContent =
@@ -115,7 +96,7 @@ document.querySelectorAll('[data-group="align"]').forEach((btn) => {
   btn.addEventListener('click', () => {
     align = (btn as HTMLElement).dataset.value as TextAlign
     setActive('align', align)
-    clearSelection()
+    textView?.clearSelection()
     render()
   })
 })
@@ -124,7 +105,7 @@ document.querySelectorAll('[data-group="verticalAlign"]').forEach((btn) => {
   btn.addEventListener('click', () => {
     verticalAlign = (btn as HTMLElement).dataset.value as VerticalAlign
     setActive('verticalAlign', verticalAlign)
-    clearSelection()
+    textView?.clearSelection()
     render()
   })
 })
@@ -135,26 +116,45 @@ function resolveMaxLineClamp(): number | undefined {
   return Number(value)
 }
 
-function clearSelection() {
-  selAnchor = 0
-  selFocus = 0
-}
+/** 划选过程中只重绘，不重建 Text（否则 selecting 状态会丢） */
+function repaintSelection() {
+  if (!textView) return
+  const cssW = canvas.clientWidth
+  const cssH = canvas.clientHeight
+  ctx.clearRect(0, 0, cssW, cssH)
+  ctx.fillStyle = '#f7f8fa'
+  ctx.fillRect(0, 0, cssW, cssH)
 
-function canvasPoint(e: PointerEvent | MouseEvent) {
-  const rect = canvas.getBoundingClientRect()
-  return {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top,
+  const { x, y, width: boxW, height: boxH } = textView
+  ctx.fillStyle = '#fff'
+  ctx.fillRect(x, y, boxW, boxH)
+  ctx.strokeStyle = '#e5e7eb'
+  ctx.lineWidth = 1
+  ctx.strokeRect(x, y, boxW, boxH)
+
+  const inlineIcons = new Set(textView.getIcons())
+  for (const shape of paint.getShapes()) {
+    if (shape === textView || inlineIcons.has(shape as Icon)) continue
+    shape.draw()
   }
-}
+  textView.draw()
 
-function selectionRange() {
-  const start = Math.min(selAnchor, selFocus)
-  const end = Math.max(selAnchor, selFocus)
-  return start === end ? undefined : { start, end }
+  const selection = textView.getSelection()
+  const { height, neededHeight, lines, clamped } = textView.getDrawResult()
+  const parts = [
+    `绘制 ${height.toFixed(1)} px`,
+    `完整 ${neededHeight.toFixed(1)} px`,
+    `${lines} 行`,
+  ]
+  if (clamped) parts.push('已截断')
+  if (selection) parts.push(`已选 ${selection.end - selection.start} 字`)
+  heightInfoEl.textContent = parts.join(' · ')
 }
 
 function render() {
+  const prevSelection = textView?.getSelection() ?? undefined
+  // 清除
+  paint.removeAllShapes();
   syncLabels()
   reportedHeight = null
 
@@ -226,8 +226,6 @@ function render() {
     bottom: Number(padBottomEl.value),
     left: Number(padLeftEl.value),
   }
-
-  const selection = selectionRange()
 
   const beforeIcons: Icon[] = []
   const afterIcons: Icon[] = []
@@ -323,7 +321,10 @@ function render() {
       console.log('onAutoHeight', h);
     },
     debug: debugEl.checked,
-    selection,
+    selection: prevSelection ?? undefined,
+    onSelectionChange: () => {
+      repaintSelection()
+    },
     beforeIcons,
     afterIcons,
     iconGap: 6,
@@ -336,6 +337,7 @@ function render() {
   // 文本框内外图标均可悬停
   hoverIcons = [...hoverIcons, ...textView.getIcons()]
 
+  const selection = textView.getSelection()
   const parts = [
     `绘制 ${height.toFixed(1)} px`,
     `完整 ${neededHeight.toFixed(1)} px`,
@@ -350,9 +352,6 @@ function render() {
   if (reportedHeight != null) parts.push(`回传 ${reportedHeight} px`)
   if (selection) {
     parts.push(`已选 ${selection.end - selection.start} 字`)
-  }
-  if (hoveredIconName) {
-    parts.push(`悬停 ${hoveredIconName}`)
   }
   heightInfoEl.textContent = parts.join(' · ')
 }
@@ -377,42 +376,29 @@ async function copySelection() {
 }
 
 canvas.addEventListener('pointerdown', (e) => {
-  if (!textView || e.button !== 0) return
-  const { x, y } = canvasPoint(e)
-  // 点在图标上时不启动划选
-  if (hoverIcons.some((icon) => icon.inside(x, y))) return
-  canvas.setPointerCapture(e.pointerId)
-  selAnchor = selFocus = textView.hitTest(x, y)
-  selecting = true
-  render()
+  paint.dispatchListener('pointerdown', e)
 })
 
 canvas.addEventListener('pointermove', (e) => {
-  const { x, y } = canvasPoint(e)
-
-  if (selecting && textView) {
-    const next = textView.hitTest(x, y)
-    if (next !== selFocus) {
-      selFocus = next
-      render()
-    }
-    return
-  }
-
-  // 鼠标移入图标区域时触发回调
-  const hit = hoverIcons.find((icon) => icon.inside(x, y)) ?? null
-  onIconHover(hit)
+  paint.dispatchListener('pointermove', e)
 })
 
-canvas.addEventListener('pointerleave', () => {
-  onIconHover(null)
+canvas.addEventListener('pointerleave', (e) => {
+  paint.dispatchListener('pointerleave', e)
 })
-canvas.addEventListener('pointerup', () => {
-  selecting = false
+canvas.addEventListener('dblclick', (e) => {
+  paint.dispatchListener('dblclick', e)
+})
+canvas.addEventListener('click', (e) => {
+  paint.dispatchListener('click', e)
+})
+canvas.addEventListener('pointerup', (e) => {
+  paint.dispatchListener('pointerup', e)
 })
 
-canvas.addEventListener('pointercancel', () => {
-  selecting = false
+canvas.addEventListener('pointercancel', (e) => {
+  console.log('pointercancel');
+  paint.dispatchListener('pointercancel', e)
 })
 
 window.addEventListener('keydown', (e) => {
@@ -447,11 +433,11 @@ const inputs = [
 
 for (const el of inputs) {
   el.addEventListener('input', () => {
-    clearSelection()
+    textView?.clearSelection()
     render()
   })
   el.addEventListener('change', () => {
-    clearSelection()
+    textView?.clearSelection()
     render()
   })
 }

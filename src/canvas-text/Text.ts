@@ -1,6 +1,11 @@
 import { Icon } from './Icon'
 import { Paint } from './Paint'
-import { Shape, type ShapeConfig } from './Shape'
+import {
+  Shape,
+  type ShapeConfig,
+  type ShapeEventMap,
+  type ShapeEventName,
+} from './Shape'
 
 export type TextAlign = 'left' | 'center' | 'right'
 export type VerticalAlign = 'top' | 'middle' | 'bottom'
@@ -37,8 +42,10 @@ export interface TextConfig extends ShapeConfig {
   font?: string
   lineHeight?: number
   color?: string
+  /** 初始选区；运行时选区由实例维护，见 getSelection / setSelection */
   selection?: TextSelectionRange
   selectionColor?: string
+  onSelectionChange?: (selection: TextSelectionRange | null) => void
   beforeIcons?: Icon[]
   afterIcons?: Icon[]
   iconGap?: number
@@ -128,6 +135,9 @@ const defaultTextOptions = {
   onAutoHeight: undefined as ((height: number) => void) | undefined,
   selection: undefined as TextSelectionRange | undefined,
   selectionColor: DEFAULT_SELECTION_COLOR,
+  onSelectionChange: undefined as
+    | ((selection: TextSelectionRange | null) => void)
+    | undefined,
   iconGap: 4,
 }
 
@@ -361,6 +371,10 @@ function measureEdges(
 
 export class Text extends Shape {
   text: string
+  /** 划选进行中（指针移出文字区域仍继续更新焦点） */
+  private selecting = false
+  private selAnchor = 0
+  private selFocus = 0
   private readonly options: ResolvedTextOptions
   private readonly pad: Padding
   private readonly box: ContentBox
@@ -377,6 +391,36 @@ export class Text extends Shape {
     this.beforeIcons = (config.beforeIcons ?? []).filter((icon) => icon.visible)
     this.afterIcons = (config.afterIcons ?? []).filter((icon) => icon.visible)
     this.box = this.createContentBox()
+    if (config.selection) {
+      this.selAnchor = config.selection.start
+      this.selFocus = config.selection.end
+    }
+    this.on('pointerdown', (e) => this.handlePointerDown(e))
+    this.on('pointermove', (e) => this.handlePointerMove(e))
+    this.on('pointerup', () => this.handlePointerUp())
+    this.on('pointercancel', () => this.handlePointerUp())
+  }
+
+  /** 是否正在划选 */
+  isSelecting(): boolean {
+    return this.selecting
+  }
+
+  getSelection(): TextSelectionRange | null {
+    return this.normalizedSelection()
+  }
+
+  setSelection(start: number, end: number): void {
+    this.selAnchor = start
+    this.selFocus = end
+    this.emitSelectionChange()
+  }
+
+  clearSelection(): void {
+    this.selAnchor = 0
+    this.selFocus = 0
+    this.selecting = false
+    this.emitSelectionChange()
   }
 
   getDrawResult(): DrawTextResult {
@@ -586,19 +630,44 @@ export class Text extends Shape {
   private normalizedSelection(
     flatLen?: number
   ): TextSelectionRange | null {
-    const sel = this.options.selection
-    if (!sel) return null
-
     const layout = this.ensureLayout(this.paint.getCtx())
     const len = Math.min(
       flatLen ?? layout.flatText.length,
       this.getSelectableEnd(layout)
     )
-    let start = Math.max(0, Math.min(sel.start, sel.end, len))
-    let end = Math.max(0, Math.min(Math.max(sel.start, sel.end), len))
+    let start = Math.max(0, Math.min(this.selAnchor, this.selFocus, len))
+    let end = Math.max(0, Math.min(Math.max(this.selAnchor, this.selFocus), len))
     start = this.excludeEllipsisIndex(start, layout.lines)
     end = this.excludeEllipsisIndex(end, layout.lines)
     return start >= end ? null : { start, end }
+  }
+
+  private handlePointerDown(e: PointerEvent): void {
+    if (e.button !== 0) return
+    const { x, y } = this.paint.getRelativePosition(e)
+    const index = this.hitTest(x, y)
+    this.selAnchor = index
+    this.selFocus = index
+    this.selecting = true
+    this.emitSelectionChange()
+  }
+
+  private handlePointerMove(e: PointerEvent): void {
+    if (!this.selecting) return
+    const { x, y } = this.paint.getRelativePosition(e)
+    const next = this.hitTest(x, y)
+    if (next === this.selFocus) return
+    this.selFocus = next
+    this.emitSelectionChange()
+  }
+
+  private handlePointerUp(): void {
+    if (!this.selecting) return
+    this.selecting = false
+  }
+
+  private emitSelectionChange(): void {
+    this.options.onSelectionChange?.(this.getSelection())
   }
 
   private paintSelection(

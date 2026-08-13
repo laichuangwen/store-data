@@ -1,5 +1,11 @@
 export { Paint, type LineOptions, type ShadowOptions, type RectOptions } from './Paint'
-export { Shape, type ShapeConfig } from './Shape'
+export {
+  Shape,
+  type ShapeConfig,
+  type ShapeEventMap,
+  type ShapeEventName,
+  type ShapeEventCallback,
+} from './Shape'
 export { Icon, type IconConfig } from './Icon'
 export {
   IconWithShadow,

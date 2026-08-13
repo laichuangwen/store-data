@@ -11,6 +11,24 @@ export class Icon extends Shape {
         super(paint, config)
         this.source = config.source
         this.name = config.name
+        this.on('pointerenter', () => {
+            this.paint.setCursor('pointer')
+        })
+        this.on('pointerleave', () => {
+            this.paint.setCursor('default')
+        })
+        this.on('click', () => {
+            console.log('click', this.name);
+        })
+        this.on('dblclick', () => {
+            console.log('dblclick', this.name);
+        })
+        this.on('pointerdown', () => {
+            console.log('pointerdown', this.name);
+        })
+        this.on('pointerup', () => {
+            console.log('pointerup', this.name);
+        })
     }
     render(paint: Paint): void {
         paint.drawImage(this.source, this.x, this.y, this.width, this.height)
